@@ -89,6 +89,7 @@ function playClick() {
   } catch (e) {}
 }
 
+const MIN_PRESS_MS = 70;
 const keyCount = 2;
 const grid = document.getElementById('keyboardGrid');
 const keys = [];
@@ -99,8 +100,12 @@ for (let i = 0; i < keyCount; i++) {
   const key = document.createElement('div');
   key.className = 'key';
   key.innerHTML = '<span class="glow"></span>';
+  let pressStart = 0;
+  let releasePending = false;
   key.addEventListener('pointerdown', () => {
+    key.classList.remove('pop');
     key.classList.add('pressed');
+    pressStart = performance.now();
     playClick();
     streakCount++;
     document.getElementById('streak').textContent = streakCount > 2 ? streakCount + ' clicks' : '';
@@ -111,12 +116,21 @@ for (let i = 0; i < keyCount; i++) {
     }, 900);
   });
   const release = () => {
-    key.classList.remove('pressed');
-    key.classList.add('pop');
-    setTimeout(() => key.classList.remove('pop'), 400);
+    if (!key.classList.contains('pressed') || releasePending) return;
+    releasePending = true;
+    const wait = Math.max(0, MIN_PRESS_MS - (performance.now() - pressStart));
+    setTimeout(() => {
+      key.classList.remove('pressed');
+      key.classList.add('pop');
+      releasePending = false;
+      setTimeout(() => key.classList.remove('pop'), 400);
+    }, wait);
   };
   key.addEventListener('pointerup', release);
-  key.addEventListener('pointerleave', () => key.classList.remove('pressed'));
+  key.addEventListener('pointerleave', () => {
+    releasePending = false;
+    key.classList.remove('pressed');
+  });
   grid.appendChild(key);
   keys.push(key);
 }
