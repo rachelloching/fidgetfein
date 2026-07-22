@@ -34,44 +34,29 @@ h1 {
 }
 
 .key {
-  --key-top: #46465e;
-  --key-bottom: #2c2c40;
-  --key-border: rgba(23, 23, 35, 0.5);
   --key-glow: rgba(160, 160, 255, 0.5);
   --key-press-glow: rgba(150, 150, 255, 0.6);
-  --key-pattern: none;
-  --key-pattern-size: auto;
+  --key-filter: none;
 
-  width: 130px;
-  height: 130px;
-  border-radius: 22px;
-  background-image: linear-gradient(180deg, var(--key-top), var(--key-bottom)), var(--key-pattern);
-  background-size: 100% 100%, var(--key-pattern-size);
-  background-repeat: no-repeat, repeat;
-  background-blend-mode: normal, overlay;
-  border-bottom: 8px solid var(--key-border);
+  width: 140px;
+  height: 140px;
+  border-radius: 20px;
+  background-image: url('icons/keycap/keycap-resting.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  filter: var(--key-filter);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   position: relative;
   transform: translateY(0);
-  transition: transform 0.05s ease-out, border-bottom-width 0.05s ease-out, box-shadow 0.15s;
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
-}
-
-.key::after {
-  content: '';
-  width: 40%;
-  height: 40%;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
+  transition: transform 0.05s ease-out, filter 0.15s;
 }
 
 .key.pressed {
-  transform: translateY(8px);
-  border-bottom-width: 1px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35), 0 0 26px var(--key-press-glow);
+  background-image: url('icons/keycap/keycap-clicked.png');
+  transform: translateY(4px);
 }
 
 .key .glow {
@@ -99,8 +84,7 @@ h1 {
 }
 
 .swatch {
-  --key-pattern: none;
-  --key-pattern-size: auto;
+  --key-filter: none;
 
   width: 34px;
   height: 34px;
@@ -108,11 +92,10 @@ h1 {
   border: 2px solid transparent;
   padding: 0;
   cursor: pointer;
-  background-image: linear-gradient(180deg, var(--key-top), var(--key-bottom)), var(--key-pattern);
-  background-size: 100% 100%, var(--key-pattern-size);
-  background-repeat: no-repeat, repeat;
-  background-blend-mode: normal, overlay;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+  background-image: url('icons/keycap/keycap-resting.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  filter: var(--key-filter);
   transition: transform 0.15s ease-out, border-color 0.15s ease-out;
 }
 
