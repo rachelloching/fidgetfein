@@ -93,8 +93,6 @@ const MIN_PRESS_MS = 70;
 const keyCount = 2;
 const grid = document.getElementById('keyboardGrid');
 const keys = [];
-let streakCount = 0;
-let streakTimer = null;
 
 for (let i = 0; i < keyCount; i++) {
   const key = document.createElement('div');
@@ -107,13 +105,6 @@ for (let i = 0; i < keyCount; i++) {
     key.classList.add('pressed');
     pressStart = performance.now();
     playClick();
-    streakCount++;
-    document.getElementById('streak').textContent = streakCount > 2 ? streakCount + ' clicks' : '';
-    clearTimeout(streakTimer);
-    streakTimer = setTimeout(() => {
-      streakCount = 0;
-      document.getElementById('streak').textContent = '';
-    }, 900);
   });
   const release = () => {
     if (!key.classList.contains('pressed') || releasePending) return;

@@ -92,13 +92,6 @@ h1 {
   100% { opacity: 0; transform: scale(1.6); }
 }
 
-.streak {
-  margin-top: 22px;
-  font-size: 13px;
-  color: #9a9ac0;
-  height: 18px;
-}
-
 .swatches {
   display: flex;
   gap: 12px;
