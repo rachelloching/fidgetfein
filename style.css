@@ -34,47 +34,52 @@ h1 {
 }
 
 .key {
-  --key-glow: rgba(160, 160, 255, 0.5);
-  --key-press-glow: rgba(150, 150, 255, 0.6);
-  --key-filter: none;
+  --key-color: transparent;
+  --key-glow: rgba(150, 170, 255, 0.65);
+  --key-press-glow: rgba(150, 170, 255, 0.85);
 
   width: 140px;
   height: 140px;
   border-radius: 20px;
-  background-image: url('icons/keycap/keycap-resting.png');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  filter: var(--key-filter);
+  background-image: linear-gradient(var(--key-color), var(--key-color)), url('icons/keycap/keycap-resting.png');
+  background-size: 100% 100%, 100% 100%;
+  background-repeat: no-repeat, no-repeat;
+  background-blend-mode: color, normal;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   position: relative;
   transform: translateY(0);
-  transition: transform 0.05s ease-out, filter 0.15s;
+  transition: transform 0.05s ease-out;
 }
 
 .key.pressed {
-  background-image: url('icons/keycap/keycap-clicked.png');
+  background-image: linear-gradient(var(--key-color), var(--key-color)), url('icons/keycap/keycap-clicked.png');
   transform: translateY(4px);
 }
 
 .key .glow {
   position: absolute;
-  inset: -6px;
-  border-radius: 22px;
+  inset: -18px;
+  border-radius: 34px;
   opacity: 0;
-  background: radial-gradient(circle, var(--key-glow), transparent 70%);
+  background: radial-gradient(circle, var(--key-glow), transparent 72%);
   pointer-events: none;
+  transition: opacity 0.06s ease-out;
+}
+
+.key.pressed .glow {
+  opacity: 1;
 }
 
 .key.pop .glow {
-  animation: popGlow 0.4s ease-out forwards;
+  animation: popGlow 0.5s ease-out forwards;
 }
 
 @keyframes popGlow {
-  0% { opacity: 0.9; transform: scale(0.6); }
-  100% { opacity: 0; transform: scale(1.6); }
+  0% { opacity: 1; background: radial-gradient(circle, var(--key-press-glow), transparent 72%); transform: scale(0.7); }
+  100% { opacity: 0; transform: scale(1.9); }
 }
 
 .swatches {
@@ -84,7 +89,7 @@ h1 {
 }
 
 .swatch {
-  --key-filter: none;
+  --swatch-color: #f5f5f7;
 
   width: 34px;
   height: 34px;
@@ -92,10 +97,8 @@ h1 {
   border: 2px solid transparent;
   padding: 0;
   cursor: pointer;
-  background-image: url('icons/keycap/keycap-resting.png');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  filter: var(--key-filter);
+  background: var(--swatch-color);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18);
   transition: transform 0.15s ease-out, border-color 0.15s ease-out;
 }
 
