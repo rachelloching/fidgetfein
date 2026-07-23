@@ -4,6 +4,7 @@ const PRESETS = [
     name: 'Classic',
     vars: {
       '--key-color': 'transparent',
+      '--key-blend': 'normal',
       '--swatch-color': '#f5f5f7',
       '--key-glow': 'rgba(150, 170, 255, 0.65)',
       '--key-press-glow': 'rgba(150, 170, 255, 0.85)',
@@ -14,6 +15,7 @@ const PRESETS = [
     name: 'Coral',
     vars: {
       '--key-color': '#ff8a73',
+      '--key-blend': 'color',
       '--swatch-color': '#ff8a73',
       '--key-glow': 'rgba(255, 150, 120, 0.65)',
       '--key-press-glow': 'rgba(255, 140, 110, 0.85)',
@@ -24,6 +26,7 @@ const PRESETS = [
     name: 'Mint',
     vars: {
       '--key-color': '#6fe0c0',
+      '--key-blend': 'color',
       '--swatch-color': '#6fe0c0',
       '--key-glow': 'rgba(140, 255, 220, 0.65)',
       '--key-press-glow': 'rgba(130, 255, 210, 0.85)',
@@ -34,6 +37,7 @@ const PRESETS = [
     name: 'Lavender',
     vars: {
       '--key-color': '#b79aff',
+      '--key-blend': 'color',
       '--swatch-color': '#b79aff',
       '--key-glow': 'rgba(200, 170, 255, 0.65)',
       '--key-press-glow': 'rgba(190, 160, 255, 0.85)',
@@ -44,6 +48,7 @@ const PRESETS = [
     name: 'Sunset',
     vars: {
       '--key-color': '#ffb86b',
+      '--key-blend': 'color',
       '--swatch-color': '#ffb86b',
       '--key-glow': 'rgba(255, 180, 150, 0.65)',
       '--key-press-glow': 'rgba(255, 170, 140, 0.85)',
@@ -57,21 +62,34 @@ function applyPreset(el, preset) {
   }
 }
 
-const POOL_SIZE = 6;
-const pool = [];
-for (let i = 0; i < POOL_SIZE; i++) {
-  const a = new Audio('assets/click.wav');
-  a.preload = 'auto';
-  pool.push(a);
+const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContextClass();
+let clickBuffer = null;
+fetch('assets/click.wav')
+  .then((r) => r.arrayBuffer())
+  .then((data) => audioCtx.decodeAudioData(data))
+  .then((buffer) => {
+    clickBuffer = buffer;
+  });
+
+function playClick(rate, gain) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (!clickBuffer) return;
+  const source = audioCtx.createBufferSource();
+  source.buffer = clickBuffer;
+  source.playbackRate.value = rate;
+  const gainNode = audioCtx.createGain();
+  gainNode.gain.value = gain;
+  source.connect(gainNode).connect(audioCtx.destination);
+  source.start(0);
 }
-let poolIndex = 0;
-function playClick() {
-  const a = pool[poolIndex];
-  poolIndex = (poolIndex + 1) % POOL_SIZE;
-  try {
-    a.currentTime = 0;
-    a.play();
-  } catch (e) {}
+
+function playPressSound() {
+  playClick(1, 1);
+}
+
+function playReleaseSound() {
+  playClick(1.18, 0.6);
 }
 
 const MIN_PRESS_MS = 70;
@@ -84,27 +102,30 @@ for (let i = 0; i < keyCount; i++) {
   key.className = 'key';
   key.innerHTML = '<span class="glow"></span>';
   let pressStart = 0;
-  let releasePending = false;
+  let pressToken = 0;
+  let popTimer = null;
   key.addEventListener('pointerdown', () => {
+    pressToken++;
+    clearTimeout(popTimer);
     key.classList.remove('pop');
     key.classList.add('pressed');
     pressStart = performance.now();
-    playClick();
+    playPressSound();
   });
   const release = () => {
-    if (!key.classList.contains('pressed') || releasePending) return;
-    releasePending = true;
+    if (!key.classList.contains('pressed')) return;
+    const myToken = pressToken;
     const wait = Math.max(0, MIN_PRESS_MS - (performance.now() - pressStart));
     setTimeout(() => {
+      if (myToken !== pressToken) return;
       key.classList.remove('pressed');
       key.classList.add('pop');
-      releasePending = false;
-      setTimeout(() => key.classList.remove('pop'), 400);
+      playReleaseSound();
+      popTimer = setTimeout(() => key.classList.remove('pop'), 400);
     }, wait);
   };
   key.addEventListener('pointerup', release);
   key.addEventListener('pointerleave', () => {
-    releasePending = false;
     key.classList.remove('pressed');
   });
   grid.appendChild(key);
