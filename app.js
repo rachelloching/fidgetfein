@@ -72,8 +72,19 @@ fetch('assets/click.wav')
     clickBuffer = buffer;
   });
 
+let audioUnlocked = false;
 function playClick(rate, gain) {
   if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (!audioUnlocked) {
+    // iOS Safari only reliably unlocks a suspended AudioContext when a
+    // buffer is started synchronously within the first user gesture.
+    audioUnlocked = true;
+    const silence = audioCtx.createBuffer(1, 1, 22050);
+    const silentSource = audioCtx.createBufferSource();
+    silentSource.buffer = silence;
+    silentSource.connect(audioCtx.destination);
+    silentSource.start(0);
+  }
   if (!clickBuffer) return;
   const source = audioCtx.createBufferSource();
   source.buffer = clickBuffer;
@@ -103,11 +114,8 @@ for (let i = 0; i < keyCount; i++) {
   key.innerHTML = '<span class="glow"></span>';
   let pressStart = 0;
   let pressToken = 0;
-  let popTimer = null;
   key.addEventListener('pointerdown', () => {
     pressToken++;
-    clearTimeout(popTimer);
-    key.classList.remove('pop');
     key.classList.add('pressed');
     pressStart = performance.now();
     playPressSound();
@@ -119,9 +127,11 @@ for (let i = 0; i < keyCount; i++) {
     setTimeout(() => {
       if (myToken !== pressToken) return;
       key.classList.remove('pressed');
-      key.classList.add('pop');
       playReleaseSound();
-      popTimer = setTimeout(() => key.classList.remove('pop'), 400);
+      const pulse = document.createElement('span');
+      pulse.className = 'pulse';
+      pulse.addEventListener('animationend', () => pulse.remove());
+      key.appendChild(pulse);
     }, wait);
   };
   key.addEventListener('pointerup', release);
