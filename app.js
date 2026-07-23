@@ -72,6 +72,9 @@ fetch('assets/click.wav')
     clickBuffer = buffer;
   });
 
+const ATTACK_S = 0.006; // soft fade-in to round off the digital onset
+const LOWPASS_HZ = 1500; // dulls the sharp edge for a rounder, padded tone
+
 let audioUnlocked = false;
 function playClick(rate, gain, duration) {
   if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -89,8 +92,18 @@ function playClick(rate, gain, duration) {
   const source = audioCtx.createBufferSource();
   source.buffer = clickBuffer;
   source.playbackRate.value = rate;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = LOWPASS_HZ;
+
   const gainNode = audioCtx.createGain();
   const now = audioCtx.currentTime;
+  // fading in (rather than jumping straight to full gain) rounds the
+  // attack and keeps overlapping rapid taps from summing into a harsh,
+  // stacked transient.
+  gainNode.gain.setValueAtTime(0, now);
+  gainNode.gain.linearRampToValueAtTime(gain, now + ATTACK_S);
   if (duration) {
     // the recording has a second, quieter transient later in the clip;
     // fade out just before it so a trimmed play doesn't sound doubled
@@ -98,13 +111,11 @@ function playClick(rate, gain, duration) {
     // buffer-relative duration into real playback (wall-clock) time.
     const wallDuration = duration / rate;
     const fade = Math.min(0.015, wallDuration / 3);
-    gainNode.gain.setValueAtTime(gain, now);
     gainNode.gain.setValueAtTime(gain, now + wallDuration - fade);
     gainNode.gain.linearRampToValueAtTime(0, now + wallDuration);
-  } else {
-    gainNode.gain.value = gain;
   }
-  source.connect(gainNode).connect(audioCtx.destination);
+
+  source.connect(filter).connect(gainNode).connect(audioCtx.destination);
   if (duration) {
     source.start(now, 0, duration);
   } else {
@@ -113,11 +124,11 @@ function playClick(rate, gain, duration) {
 }
 
 function playPressSound() {
-  playClick(1, 1);
+  playClick(1, 0.8);
 }
 
 function playReleaseSound() {
-  playClick(1.18, 0.6, 0.11);
+  playClick(1.18, 0.45, 0.11);
 }
 
 const MIN_PRESS_MS = 70;
