@@ -73,7 +73,7 @@ fetch('assets/click.wav')
   });
 
 let audioUnlocked = false;
-function playClick(rate, gain) {
+function playClick(rate, gain, duration) {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   if (!audioUnlocked) {
     // iOS Safari only reliably unlocks a suspended AudioContext when a
@@ -90,9 +90,26 @@ function playClick(rate, gain) {
   source.buffer = clickBuffer;
   source.playbackRate.value = rate;
   const gainNode = audioCtx.createGain();
-  gainNode.gain.value = gain;
+  const now = audioCtx.currentTime;
+  if (duration) {
+    // the recording has a second, quieter transient later in the clip;
+    // fade out just before it so a trimmed play doesn't sound doubled
+    // or get cut off with an audible click. duration/rate converts the
+    // buffer-relative duration into real playback (wall-clock) time.
+    const wallDuration = duration / rate;
+    const fade = Math.min(0.015, wallDuration / 3);
+    gainNode.gain.setValueAtTime(gain, now);
+    gainNode.gain.setValueAtTime(gain, now + wallDuration - fade);
+    gainNode.gain.linearRampToValueAtTime(0, now + wallDuration);
+  } else {
+    gainNode.gain.value = gain;
+  }
   source.connect(gainNode).connect(audioCtx.destination);
-  source.start(0);
+  if (duration) {
+    source.start(now, 0, duration);
+  } else {
+    source.start(now);
+  }
 }
 
 function playPressSound() {
@@ -100,7 +117,7 @@ function playPressSound() {
 }
 
 function playReleaseSound() {
-  playClick(1.18, 0.6);
+  playClick(1.18, 0.6, 0.11);
 }
 
 const MIN_PRESS_MS = 70;
